@@ -30,7 +30,7 @@ def trainCards():
 	'''for (i,image_file) in enumerate(glob.iglob('/trainning_images/')):
 			trainning[i] = (image_file,preprocessimg(image_file))'''
 
-def preprocessimg(img):
+def preprocessimg(image):
 	#image = cv2.resize(image,(1280,720))
 	gray = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
 	blur = cv2.GaussianBlur(gray,(5,5),0)
