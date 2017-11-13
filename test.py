@@ -2,6 +2,18 @@ import numpy as np
 import cv2
 from glob import glob
 
+import time
+from matplotlib import pyplot as plt
+
+
+# Adaptive threshold levels
+BKG_THRESH = 60
+CARD_THRESH = 30
+
+CARD_MAX_AREA = 12000
+CARD_MIN_AREA = 2500
+
+
 def trainCards():
 	
 	trainning = {}
@@ -19,12 +31,17 @@ def trainCards():
 			trainning[i] = (image_file,preprocessimg(image_file))'''
 
 def preprocessimg(img):
-	gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-  	blur = cv2.GaussianBlur(gray,(5,5),2 )
-  	thresh = cv2.adaptiveThreshold(blur,255,1,1,11,1)
-  	return thresh
+	#image = cv2.resize(image,(1280,720))
+	gray = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
+	blur = cv2.GaussianBlur(gray,(5,5),0)
 
+	img_w, img_h = np.shape(image)[:2]
+	bkg_level = gray[int(img_h/100)][int(img_w/2)]
+	thresh_level = bkg_level + BKG_THRESH
+	retval, thresh_img = cv2.threshold(blur,thresh_level,255,cv2.THRESH_BINARY)
 
+	return thresh_img
+	
 def matchCards(img1,img2):
 	pass
 
