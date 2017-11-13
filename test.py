@@ -126,9 +126,35 @@ def find_card(thresh_img, image):
 
     return warp
 
+def cardDiff(img1, img2):
+    img1 = cv2.GaussianBlur(i,(5,5),5)
+    img2 = cv2.GaussianBlur(img2,(5,5),5)    
+    diff = cv2.absdiff(img1,img2)  
+    diff = cv2.GaussianBlur(diff,(5,5),5)    
+    flag, diff = cv2.threshold(diff, 200, 255, cv2.THRESH_BINARY) 
 
-def matchCards(img1,img2):
-	pass
+    return np.sum(diff)  
+
+def matchCards(test_img, train_imgs):
+    test_features = preprocessimg(test_img)
+    diff_dic = {}
+    for label, train_features in train_imgs.item():
+        diff_dic[label] = cardDiff(test_features, train_features)
+    return sorted(diff_dic, key=diff_dic.get)
+
+
+    '''diff_list = []
+    for i, train_features in enumerate(train_imgs.values()):
+        diff = cardDiff(train_features, test_features)
+        diff_dict[i] = diff 
+    sorted_d = sorted(d.items(), key=operator.itemgetter(0))
+    testsorted_d[0].keys()'''
+
+
+
+    
+
+    return sorted(training.values(), key=lambda x:imgdiff(x[1],features))[0][0] 
 
 
 cv2.imshow('test',trainCards()['Spade of Six'])
