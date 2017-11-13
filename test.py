@@ -2,18 +2,6 @@ import numpy as np
 import cv2
 from glob import glob
 
-import time
-from matplotlib import pyplot as plt
-
-
-# Adaptive threshold levels
-BKG_THRESH = 60
-CARD_THRESH = 30
-
-CARD_MAX_AREA = 12000
-CARD_MIN_AREA = 2500
-
-
 def trainCards():
 	
 	trainning = {}
@@ -23,24 +11,19 @@ def trainCards():
 	for item in img_names:
 		image = cv2.imread(item)
 		item_modify = item.split('/')[1].split('.')[0]
+		image = cv2.resize(image,(200,300))
    		trainning[item_modify] = (preprocessimg(image))
-   	print trainning
+   	print len(trainning)
    	return trainning
 
 	'''for (i,image_file) in enumerate(glob.iglob('/trainning_images/')):
 			trainning[i] = (image_file,preprocessimg(image_file))'''
 
-def preprocessimg(image):
-	#image = cv2.resize(image,(1280,720))
-	gray = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
-	blur = cv2.GaussianBlur(gray,(5,5),0)
-
-	img_w, img_h = np.shape(image)[:2]
-	bkg_level = gray[int(img_h/100)][int(img_w/2)]
-	thresh_level = bkg_level + BKG_THRESH
-	retval, thresh_img = cv2.threshold(blur,thresh_level,255,cv2.THRESH_BINARY)
-
-	return thresh_img
+def preprocessimg(img):
+	gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+  	blur = cv2.GaussianBlur(gray,(5,5),0)
+  	thresh = cv2.adaptiveThreshold(blur,255,1,1,11,1)
+  	return thresh
 
 
 def find_card(thresh_img, image):
@@ -66,7 +49,7 @@ def find_card(thresh_img, image):
     pts = np.float32(approx)
 
     # Find width and height of card's bounding rectangle
-    x,y,w,h = cv2.boundingRect(cnt)  #(x,y) be the top-left coordinate of the rectangle and (w,h) be its width and height.
+    x,y,w,h = cv2.boundingRect(card_cnt)  #(x,y) be the top-left coordinate of the rectangle and (w,h) be its width and height.
     temp_rect = np.zeros((4,2), dtype = "float32")
 
     s = np.sum(pts, axis = 2)
@@ -127,20 +110,36 @@ def find_card(thresh_img, image):
     return warp
 
 def cardDiff(img1, img2):
-    img1 = cv2.GaussianBlur(i,(5,5),5)
-    img2 = cv2.GaussianBlur(img2,(5,5),5)    
-    diff = cv2.absdiff(img1,img2)  
+    '''image1 = cv2.GaussianBlur(img1,(5,5),5)
+    image2 = cv2.GaussianBlur(img2,(5,5),5)   
+    diff = cv2.absdiff(image1,image2)  
     diff = cv2.GaussianBlur(diff,(5,5),5)    
-    flag, diff = cv2.threshold(diff, 200, 255, cv2.THRESH_BINARY) 
+    flag, diff = cv2.threshold(diff, 127, 255, cv2.THRESH_BINARY) 
 
-    return np.sum(diff)  
+    return np.sum(diff)'''
+
+    # Initiate SIFT detector
+    #sift = cv2.SIFT()
+    sift = cv2.xfeatures2d.SIFT_create()
+    # find the keypoints and descriptors with SIFT
+    kp1, des1 = sift.detectAndCompute(img1,None)
+    kp2, des2 = sift.detectAndCompute(img2,None)
+    # BFMatcher with default params
+    bf = cv2.BFMatcher()
+    matches = bf.knnMatch(des1,des2, k=2)
+    # Apply ratio test
+    good = []
+    for m,n in matches:
+        if m.distance < 0.75*n.distance:
+            good.append([m])
+    return len(good)
 
 def matchCards(test_img, train_imgs):
     test_features = preprocessimg(test_img)
     diff_dic = {}
-    for label, train_features in train_imgs.item():
+    for label, train_features in train_imgs.items():
         diff_dic[label] = cardDiff(test_features, train_features)
-    return sorted(diff_dic, key=diff_dic.get)
+    return sorted(diff_dic.keys(), key=diff_dic.get, reverse=True)
 
 
     '''diff_list = []
@@ -154,10 +153,13 @@ def matchCards(test_img, train_imgs):
 
     
 
-    return sorted(training.values(), key=lambda x:imgdiff(x[1],features))[0][0] 
+    #return sorted(training.values(), key=lambda x:imgdiff(x[1],features))[0][0] 
 
+img = cv2.imread('trainning_images/test6.jpg')
+test_img = find_card(preprocessimg(img),img)
+print matchCards(test_img,trainCards())
 
-cv2.imshow('test',trainCards()['Spade of Six'])
+'''cv2.imshow('test',trainCards()['Spade of Six'])
 cv2.waitKey(0)
-cv2.destroyAllWindows()
+cv2.destroyAllWindows()'''
 #print trainCards()[6]
