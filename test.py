@@ -3,7 +3,8 @@ import cv2
 from glob import glob
 
 def trainCards():
-	
+	print '********************** Start Trainning **********************'
+
 	trainning = {}
 
 	img_mask = 'trainning_images/*.jpg'
@@ -12,8 +13,8 @@ def trainCards():
 		image = cv2.imread(item)
 		item_modify = item.split('/')[1].split('.')[0]
 		image = cv2.resize(image,(200,300))
-   		trainning[item_modify] = (preprocessimg(image))
-   	print len(trainning)
+   		trainning[item_modify] = preprocessimg(image)
+   	print '********************** There are ',len(trainning),' cards are trainned **********************'
    	return trainning
 
 	'''for (i,image_file) in enumerate(glob.iglob('/trainning_images/')):
@@ -135,10 +136,10 @@ def cardDiff(img1, img2):
     return len(good)
 
 def matchCards(test_img, train_imgs):
-    test_features = preprocessimg(test_img)
+    #test_features = preprocessimg(test_img)
     diff_dic = {}
     for label, train_features in train_imgs.items():
-        diff_dic[label] = cardDiff(test_features, train_features)
+        diff_dic[label] = cardDiff(test_img, train_features)
     return sorted(diff_dic.keys(), key=diff_dic.get, reverse=True)
 
 
@@ -155,11 +156,15 @@ def matchCards(test_img, train_imgs):
 
     #return sorted(training.values(), key=lambda x:imgdiff(x[1],features))[0][0] 
 
-img = cv2.imread('trainning_images/test6.jpg')
-test_img = find_card(preprocessimg(img),img)
+img = cv2.imread('trainning_images/test7.jpg')
+test_img = preprocessimg(find_card(preprocessimg(img),img))
 print matchCards(test_img,trainCards())
+
+cv2.imshow('The card after rotation',test_img)
+cv2.imshow('test',trainCards()['Club of Ace'])
+cv2.waitKey(0)
+cv2.destroyAllWindows()
 
 '''cv2.imshow('test',trainCards()['Spade of Six'])
 cv2.waitKey(0)
 cv2.destroyAllWindows()'''
-#print trainCards()[6]
