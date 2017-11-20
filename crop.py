@@ -4,9 +4,9 @@ from glob import glob
 
 def preprocessimg(img):
 	gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-  	blur = cv2.GaussianBlur(gray,(7,7),2)
-  	thresh = cv2.adaptiveThreshold(blur,255,1,1,11,1)
-  	return thresh
+  	blur = cv2.GaussianBlur(gray,(5,5),0)
+  	#thresh = cv2.adaptiveThreshold(blur,255,1,1,11,1)
+  	return blur
 
 
 def find_card(thresh_img, image):
@@ -100,11 +100,12 @@ img_names = glob(img_mask)
 for item in img_names:
     print item
     image = cv2.imread(item)
-    image_corp = find_card(preprocessimg(image),image)
+    image_corp = cv2.resize(preprocessimg(image),(450,450))[0:118,0:65]
+    print image_corp.shape
     '''cv2.imshow('test',image_corp)
     cv2.waitKey(0)
     cv2.destroyAllWindows()'''
-    #item_modify = item.split('/')[1].split('.')[0]
+    item_modify = item.split('trainning_images')[1].split('.')[0]
     #image = cv2.resize(image,(200,300))
     cv2.imwrite('new/%s'%item,image_corp)
     
